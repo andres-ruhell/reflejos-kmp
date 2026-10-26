@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Dónde va? · Kotlin Multiplatform</title>
+
+
+<style>
+  :root {
+    --fondo: #16132A; --tarjeta: #221D3D; --borde: #3A3360; --texto: #F6F4EF; --suave: #CFC8E8;
+    --morado: #B49CFF; --morado-fuerte: #5B34D6; --naranja: #F0A070; --bien: #6FD69A; --mal: #FF8A80;
+    --codigo: #0F0D20;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { background: var(--fondo); color: var(--texto); }
+  body { font-family: 'IBM Plex Sans', Arial, sans-serif; min-height: 100vh; display: flex; justify-content: center; padding: 20px 16px 40px; }
+  main { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 18px; }
+  h1, h2 { font-family: 'Space Grotesk', Arial, sans-serif; line-height: 1.15; }
+  h1 { font-size: 40px; }
+  h2 { font-size: 26px; }
+  p { line-height: 1.5; }
+  .ojo { color: var(--morado); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; font-size: 13px; }
+  .suave { color: var(--suave); }
+  .barra { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; color: var(--suave); }
+  .progreso { height: 6px; background: var(--tarjeta); border-radius: 3px; overflow: hidden; }
+  .progreso > div { height: 100%; background: var(--morado); transition: width .3s; }
+  .tiempo { height: 4px; background: var(--tarjeta); border-radius: 2px; overflow: hidden; }
+  .tiempo > div { height: 100%; background: var(--naranja); }
+  .tarjeta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  pre { background: var(--codigo); border-radius: 12px; padding: 14px 16px; overflow-x: auto; font: 15px/1.55 'JetBrains Mono', 'Courier New', monospace; color: #E9E5F7; white-space: pre; }
+  .etq { display: block; font: 600 12px 'IBM Plex Sans', Arial, sans-serif; color: var(--suave); margin-bottom: 4px; letter-spacing: 1px; text-transform: uppercase; }
+  .kw { color: #F0A070; } .str { color: #9EE6B0; } .com { color: #8C86A3; } .ann { color: #B49CFF; }
+  .opciones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .opciones.una { grid-template-columns: 1fr; }
+  @media (max-width: 480px) { .opciones { grid-template-columns: 1fr; } h1 { font-size: 32px; } }
+  button { font: 600 17px 'IBM Plex Sans', Arial, sans-serif; color: var(--texto); background: var(--tarjeta); border: 2px solid var(--borde); border-radius: 12px; padding: 14px 16px; min-height: 56px; cursor: pointer; text-align: left; }
+  button:hover:not(:disabled) { border-color: var(--morado); }
+  button:disabled { cursor: default; }
+  button.mono { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 15px; }
+  button.correcta { border-color: var(--bien); background: #1F3B2E; }
+  button.incorrecta { border-color: var(--mal); background: #3B1F28; }
+  button.primario { background: var(--morado-fuerte); border-color: var(--morado-fuerte); text-align: center; }
+  input { font: 18px 'IBM Plex Sans', Arial, sans-serif; padding: 14px; border-radius: 12px; border: 2px solid var(--borde); background: var(--tarjeta); color: var(--texto); width: 100%; }
+  .retro { border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .retro.bien { background: #1F3B2E; border: 1px solid var(--bien); }
+  .retro.mal { background: #3B1F28; border: 1px solid var(--mal); }
+  .retro b { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 20px; }
+  .puntos { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 64px; font-weight: 700; color: var(--naranja); }
+  .rondas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ronda { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; }
+  .ronda b { display: block; font-family: 'Space Grotesk', Arial, sans-serif; }
+  .ronda span { color: var(--suave); font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 10px 6px; border-top: 1px solid var(--borde); }
+  tr:first-child td { border-top: none; }
+  td.n { width: 40px; color: var(--suave); font-family: 'Space Grotesk', Arial, sans-serif; }
+  td.p { text-align: right; font-family: 'Space Grotesk', Arial, sans-serif; font-weight: 700; color: var(--naranja); white-space: nowrap; }
+  tr.yo td { color: var(--morado); }
+  body.tablero main { max-width: 1100px; }
+  body.tablero h1 { font-size: 56px; }
+  body.tablero table { font-size: 30px; }
+
+  body { padding: 30px 20px 52px; font-family: system-ui, -apple-system, sans-serif; }
+  main { max-width: 800px; gap: 20px; }
+  h1,h2,.puntos,.retro b { font-family: system-ui, -apple-system, sans-serif; letter-spacing: -.04em; }
+  h1 { font-size: clamp(40px,8vw,68px); }
+  .marca { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--borde); padding-bottom:18px; font-size:14px; color:var(--suave); }
+  .marca strong {color:var(--texto)}
+  .tarjeta { border:0; border-radius:0; background:transparent; padding:8px 0; }
+  pre {font-family:ui-monospace,Menlo,Consolas,monospace;font-size:clamp(13px,2.6vw,16px);border:1px solid var(--borde);border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;}
+  button,input,select {font-family:inherit;}
+  button {transition:background .15s,border-color .15s,transform .15s;}
+  button:hover:not(:disabled) {transform:translateY(-2px)}
+  button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible {outline:3px solid var(--morado);outline-offset:4px}
+  .rondas {display:block;border-top:1px solid var(--borde)}
+  .ronda {background:transparent;border:0;border-bottom:1px solid var(--borde);border-radius:0;padding:12px 0;display:flex;justify-content:space-between;gap:12px}
+  .campos {display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  label {display:block;font-size:14px;color:var(--suave)}
+  input,select {margin-top:8px;font-size:16px;padding:13px;background:var(--tarjeta);border:1px solid var(--borde);border-radius:8px;color:var(--texto);width:100%;min-height:50px}
+  .archivo {font:13px ui-monospace,Menlo,monospace;color:var(--morado)}
+  .contexto {font-size:14px;color:var(--suave)}
+  #retro {scroll-margin-bottom:20px;}
+  .retro {animation:entrar .18s ease-out;}
+  .revisar {border-top:1px solid var(--borde);padding:16px 0;}
+  summary {cursor:pointer;padding:12px 0;color:var(--morado)}
+  .tiempo .numero {position:absolute;right:0;top:-23px;font-size:13px;color:var(--suave)}
+  .tiempo {position:relative;margin-top:8px;overflow:visible}
+  .aviso {color:var(--suave);font-size:14px}
+  #error {color:var(--mal);font-size:14px}
+  @keyframes entrar {from {opacity:0;transform:translateY(5px)} to {opacity:1;transform:none}}
+  @media(max-width:540px){.campos{grid-template-columns:1fr}body{padding:20px 16px 36px}.barra{font-size:12px}.opciones{grid-template-columns:1fr}h2{font-size:24px}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+// ── Configuración del ranking (opcional). Sin esto, el juego funciona igual pero sin ranking.
+// También se puede pasar en el link: donde-va.html?url=https://xxxx.supabase.co&key=sb_publishable_...
+const SUPABASE_URL = '';
+const SUPABASE_KEY = '';
+
+const params = new URLSearchParams(location.search);
+const SB_URL = (params.get('url') || SUPABASE_URL).replace(/\/$/, '');
+const SB_KEY = params.get('key') || SUPABASE_KEY;
+const HAY_RANKING = Boolean(SB_URL && SB_KEY);
+const SEGUNDOS = 20;
+
+const FUENTES = ['commonMain', 'androidMain', 'Desktop (jvmMain)', 'iosMain'];
+const SI_NO = ['Sí, compila', 'No compila'];
+const BLOQUES = ['commonMain', 'androidMain', 'iosMain', 'Desktop (jvmMain)', 'commonTest'];
+const COMPILADORES = ['Kotlin/JVM', 'Kotlin/Native', 'Kotlin/Wasm', 'Ninguno: se interpreta'];
+
+const RONDAS = [
+ {titulo:'¿En qué carpeta va?',regla:'Elige el source set correcto. Los ejemplos usan los archivos de Reflejos KMP.',preguntas:[
+ {codigo:'class Juego(private val reloj: TimeSource = TimeSource.Monotonic)',opciones:FUENTES,ok:0,porque:'Juego.kt usa Kotlin puro y kotlin.time: la lógica se comparte.',archivo:'Hito 1 · Juego.kt'},
+ {codigo:'val modelo = android.os.Build.MODEL',opciones:FUENTES,ok:1,porque:'Build.MODEL pertenece al SDK de Android.',archivo:'Hito 3 · Plataforma.android.kt'},
+ {codigo:'val equipo = UIDevice.currentDevice.model',opciones:FUENTES,ok:3,porque:'UIDevice es de UIKit. En iosMain se importa platform.UIKit.UIDevice.',archivo:'Hito 3 · Plataforma.ios.kt'},
+ {codigo:'System.getProperty("os.name")',opciones:FUENTES,ok:2,porque:'Este actual obtiene el sistema de la laptop con la API de Java.',archivo:'Hito 3 · Plataforma.jvm.kt'},
+ {codigo:'val marca = TimeSource.Monotonic.markNow()',opciones:FUENTES,ok:0,porque:'kotlin.time está disponible en todas las plataformas; no hace falta java.time.',archivo:'Hito 1 · Juego.kt'},
+ {codigo:'@Composable\nfun App() { Text("Reflejos KMP") }',opciones:FUENTES,ok:0,porque:'Compose Multiplatform permite compartir la pantalla en commonMain.',archivo:'Hito 2 · App.kt'},
+ {codigo:'suspend fun enviarPuntaje(nombre: String, ms: Long, plataforma: String): Boolean',opciones:FUENTES,ok:0,porque:'La petición se escribe en commonMain; cada plataforma aporta su motor de Ktor.',archivo:'Hito 4 · Ranking.kt'}]},
+ {titulo:'¿Compila?',regla:'Los fragmentos usan el mismo paquete. Supón que los imports y los actual de los demás destinos están completos.',preguntas:[
+ {bloques:[['commonMain','expect fun plataforma(): String'],['androidMain','actual fun plataforma(): String = "Android · ${Build.MODEL}"']],opciones:SI_NO,ok:0,porque:'El actual tiene el mismo nombre, parámetros y retorno que el expect.',archivo:'Hito 3 · Plataforma*.kt'},
+ {bloques:[['commonMain','expect fun plataforma(): String'],['iosMain','fun plataforma(): String = "iOS"']],opciones:SI_NO,ok:1,porque:'Falta actual en la implementación de iosMain.',archivo:'Hito 3 · Plataforma.ios.kt'},
+ {bloques:[['commonMain','expect fun plataforma(): String'],['jvmMain','actual fun plataforma(): Int = 1']],opciones:SI_NO,ok:1,porque:'El retorno debe ser String, igual que en el expect.',archivo:'Hito 3 · Plataforma.jvm.kt'},
+ {bloques:[['commonMain','val hoy = java.util.Date()']],opciones:SI_NO,ok:1,porque:'La API java.util no está disponible en el destino iOS del proyecto.',archivo:'Hito 1 · código compartido'},
+ {bloques:[['commonMain','val espera = Random.nextLong(1_500, 4_000)']],opciones:SI_NO,ok:0,porque:'kotlin.random es multiplataforma. Así elige Juego.kt su espera.',archivo:'Hito 1 · Juego.kt'},
+ {texto:'El actual de escritorio devuelve una cadena fija. ¿Es válido?',bloques:[['commonMain','expect fun plataforma(): String'],['jvmMain','actual fun plataforma(): String = "Desktop"']],opciones:SI_NO,ok:0,porque:'Sí. Cumple la firma, aunque no use una API del sistema.',archivo:'Hito 3 · Plataforma.jvm.kt'},
+ {texto:'Hay actual en Android y Desktop, pero falta el de iosMain. ¿Compila el destino iOS?',codigo:'expect fun plataforma(): String',opciones:SI_NO,ok:1,porque:'Cada destino compilado necesita su actual. Crear el archivo iOS es necesario; ejecutarlo requiere Mac.',archivo:'Hito 3 · Plataforma.ios.kt'}]},
+ {titulo:'¿Dónde va la dependencia?',regla:'Lee el destino y el archivo indicados. Los motores de Ktor se agregan en shared/build.gradle.kts.',preguntas:[
+ {codigo:'implementation(libs.ktor.client.core)',opciones:BLOQUES,ok:0,porque:'El núcleo multiplataforma permite usar HttpClient en commonMain.',archivo:'Hito 4 · shared/build.gradle.kts'},
+ {codigo:'implementation(libs.ktor.client.darwin)',opciones:BLOQUES,ok:2,porque:'Darwin es el motor para iOS.',archivo:'Hito 4 · shared/build.gradle.kts'},
+ {texto:'OkHttp para la app Android.',codigo:'implementation(libs.ktor.client.okhttp)',opciones:BLOQUES,ok:1,porque:'Android usa OkHttp; se declara en androidMain.dependencies.',archivo:'Hito 4 · shared/build.gradle.kts'},
+ {codigo:'implementation(libs.kotlin.test)',opciones:BLOQUES,ok:4,porque:'Las pruebas compartidas de JuegoTest.kt viven en commonTest.',archivo:'Hito 1 · shared/build.gradle.kts'},
+ {texto:'Esta línea ya viene en desktopApp/build.gradle.kts. ¿Qué aplicación la usa?',codigo:'implementation(libs.kotlinx.coroutinesSwing)',opciones:['androidApp','iosApp','desktopApp','Todas por igual'],ok:2,porque:'El alias real es coroutinesSwing. Está en desktopApp, que usa la JVM de escritorio.',archivo:'Plantilla · desktopApp/build.gradle.kts'},
+ {texto:'OkHttp para el juego en la laptop.',codigo:'implementation(libs.ktor.client.okhttp)',opciones:BLOQUES,ok:3,porque:'También funciona en JVM: en shared se agrega a jvmMain.dependencies.',archivo:'Hito 4 · shared/build.gradle.kts'},
+ {texto:'¿En qué archivo se habilita el acceso a internet de Android?',codigo:'<uses-permission android:name="android.permission.INTERNET" />',opciones:['shared/build.gradle.kts','androidApp/src/main/AndroidManifest.xml','iosApp/Info.plist','Juego.kt'],ok:1,porque:'El permiso va en el manifiesto Android, antes de <application>. Ya viene en el proyecto.',archivo:'Preparación · AndroidManifest.xml'}]},
+ {titulo:'¿Qué hace el código?',regla:'Relaciona el código, los estados y las plataformas de los ejemplos.',preguntas:[
+ {texto:'¿Qué compilador genera el código compartido para el iPhone?',opciones:COMPILADORES,ok:1,porque:'Kotlin/Native genera código nativo. Xcode integra el framework y construye la app.',archivo:'Hito 3 · destino iOS'},
+ {texto:'¿Qué ocurre después de compilar Kotlin para Android?',opciones:['Se ejecuta en la JVM de escritorio','D8 convierte el bytecode en DEX para Android Runtime','Se interpreta el archivo .kt','Xcode crea la APK'],ok:1,porque:'Kotlin/JVM genera bytecode; las herramientas Android lo convierten a DEX para ART.',archivo:'Destino Android'},
+ {texto:'¿Dónde se ejecuta desktopApp?',opciones:['En la JVM','Dentro de Safari','En Kotlin/Native','En el simulador iOS'],ok:0,porque:'El destino de escritorio del kit es JVM; por eso el source set es jvmMain.',archivo:'Destino Desktop'},
+ {texto:'Tocas la pantalla mientras todavía está roja. ¿Qué estado sigue?',opciones:['Ya','Resultado','Falta','Inicio'],ok:2,porque:'Juego.tocar() cambia Esperando a Falta: tocaste antes de tiempo.',archivo:'Hito 1 · Juego.kt'},
+ {texto:'¿Qué le entrega el módulo shared a Xcode?',opciones:['Un framework','Una APK','Un archivo .jar','Un archivo .wasm'],ok:0,porque:'Xcode usa el framework de shared en la app iOS.',archivo:'Destino iOS'},
+ {texto:'En inicial fallan dos de las cuatro pruebas de JuegoTest por NotImplementedError. ¿Qué haces?',opciones:['Reinstalar el IDE','Borrar las pruebas','Completar ponerVerde() y tocar()','Cambiar la versión de Kotlin'],ok:2,porque:'Es el punto de partida esperado. Al completar el hito 1 pasan las cuatro.',archivo:'Hito 1 · JuegoTest.kt'},
+ {texto:'Supabase no está disponible. ¿Qué debe pasar?',opciones:['El juego se cierra','El juego sigue con el resultado local','Hay que instalar Xcode','Se pierde todo el código'],ok:1,porque:'El envío es opcional. La práctica permite seguir jugando y mostrar el tiempo local.',archivo:'Hito 4 · App.kt y Ranking.kt'}]}
+];
+const BANCO = RONDAS.reduce((s,r)=>s+r.preguntas.length,0);
+let seleccion = RONDAS;
+let TOTAL = BANCO;
+
+const LS = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+const app = document.getElementById('app');
+let st = null;
+let reloj = null;
+
+function esc(s) { return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+function escAttr(s) { return esc(s).replace(/"/g, '&quot;'); }
+function resaltar(codigo) {
+  return esc(codigo).replace(
+    /("[^"\n]*")|(\/\/[^\n]*)|(@\w+)|\b(expect|actual|fun|val|var|data|class|import|implementation)\b/g,
+    (m, str, com, ann, kw) => str ? `<span class="str">${str}</span>` : com ? `<span class="com">${com}</span>` :
+      ann ? `<span class="ann">${ann}</span>` : `<span class="kw">${kw}</span>`);
+}
+function headers(extra) {
+  const h = Object.assign({ apikey: SB_KEY }, extra || {});
+  if (SB_KEY.startsWith('eyJ')) h.Authorization = 'Bearer ' + SB_KEY;
+  return h;
+}
+
+
+const marca = '<div class="marca"><strong>¿Dónde va?</strong><span>Juego de preguntas de KMP</span></div>';
+function inicio() {
+ clearInterval(reloj);
+ app.innerHTML = `${marca}<p class="ojo">Kotlin Multiplatform</p><h1>¿Dónde va?</h1>
+ <p class="suave">Identifica carpetas, código y dependencias de Kotlin Multiplatform. Juega desde el navegador, sin abrir el IDE.</p>
+ <div class="rondas">${RONDAS.map((r,i)=>`<div class="ronda"><b>0${i+1} / ${esc(r.titulo)}</b><span>Hitos 1–4</span></div>`).join('')}</div>
+ <form id="arranque"><div class="campos"><label for="nombre">Tu nombre o apodo<input id="nombre" maxlength="30" autocomplete="nickname" required value="${escAttr(LS.get('dondeva_nombre')||'')}" placeholder="Escribe tu nombre"></label>
+ <label for="modo">Elige una ronda<select id="modo"><option value="clase">Clase · 12 preguntas · con reloj</option><option value="practica">Repaso · 28 preguntas · sin reloj</option></select></label></div>
+ <p class="aviso" style="margin:16px 0">Clase: 20 segundos por respuesta. Después puedes leer la explicación sin límite.</p><p id="error" role="alert"></p><button class="primario" style="width:100%" type="submit">Empezar</button></form>
+ <p class="aviso">${HAY_RANKING?'La ronda de clase guarda tu nombre o apodo y puntaje en el ranking.':'Funciona sin conexión. El resultado se queda en esta pantalla.'} El repaso no se envía al ranking.</p>`;
+ document.getElementById('arranque').onsubmit=e=>{
+  e.preventDefault(); const nombre=document.getElementById('nombre').value.trim().slice(0,30);
+  if(!nombre){document.getElementById('error').textContent='Escribe un nombre o apodo.';document.getElementById('nombre').focus();return;}
+  const modo=document.getElementById('modo').value; LS.set('dondeva_nombre',nombre);
+  seleccion=RONDAS.map(r=>({...r,preguntas:modo==='clase'?r.preguntas.slice(0,3):r.preguntas}));
+  TOTAL=seleccion.reduce((s,r)=>s+r.preguntas.length,0);
+  st={nombre,modo,ronda:0,pregunta:0,puntos:0,aciertos:0,racha:0,mejorRacha:0,hechas:0,errores:[]}; pregunta();
+ };
+}
+function encabezado(){return `${marca}<div class="barra"><span>Ronda ${st.ronda+1}/4 · Pregunta ${st.hechas+1}/${TOTAL}</span><span>${st.puntos} pts${st.racha>1?' · racha '+st.racha:''}</span></div><div class="progreso" role="progressbar" aria-label="Progreso" aria-valuenow="${st.hechas}" aria-valuemin="0" aria-valuemax="${TOTAL}"><div style="width:${100*st.hechas/TOTAL}%"></div></div>`;}
+function pregunta(){
+ clearInterval(reloj); const r=seleccion[st.ronda],q=r.preguntas[st.pregunta];
+ app.innerHTML=`${encabezado()}<p class="ojo">${esc(r.titulo)}</p><p class="contexto">${esc(r.regla)}</p>
+ ${st.modo==='clase'?'<div class="tiempo"><span class="numero" id="segundos">20 s</span><div id="t" style="width:100%"></div></div>':'<p class="aviso">Repaso sin reloj</p>'}
+ <div class="tarjeta"><p class="archivo">${esc(q.archivo)}</p>${q.texto?`<h2 id="enunciado" tabindex="-1">${esc(q.texto)}</h2>`:'<h2 id="enunciado" tabindex="-1">Elige la respuesta</h2>'}
+ ${q.codigo?`<pre>${resaltar(q.codigo)}</pre>`:''}${(q.bloques||[]).map(([etq,c])=>`<div><span class="etq">${esc(etq)}</span><pre>${resaltar(c)}</pre></div>`).join('')}</div>
+ <div class="opciones" aria-label="Respuestas">${q.opciones.map((o,i)=>`<button data-i="${i}">${esc(o)}</button>`).join('')}</div><div id="retro" role="status" aria-live="polite"></div>`;
+ document.getElementById('enunciado').focus({preventScroll:true});
+ const inicioMs=performance.now();let respondida=false;
+ const responder=i=>{if(respondida)return;respondida=true;clearInterval(reloj);const restante=st.modo==='clase'?Math.max(0,SEGUNDOS-(performance.now()-inicioMs)/1000):0;calificar(q,i,restante);};
+ app.querySelectorAll('.opciones button').forEach(b=>b.onclick=()=>responder(Number(b.dataset.i)));
+ if(st.modo==='clase')reloj=setInterval(()=>{const restante=SEGUNDOS-(performance.now()-inicioMs)/1000;document.getElementById('t').style.width=Math.max(0,100*restante/SEGUNDOS)+'%';document.getElementById('segundos').textContent=Math.max(0,Math.ceil(restante))+' s';if(restante<=0)responder(-1);},100);
+}
+function calificar(q,i,restante){
+ const bien=i===q.ok;let ganados=0;
+ if(bien){st.racha++;st.aciertos++;st.mejorRacha=Math.max(st.mejorRacha,st.racha);ganados=100+(st.modo==='clase'?Math.round(50*restante/SEGUNDOS)+Math.min(st.racha-1,5)*10:0);st.puntos+=ganados;}
+ else{st.racha=0;st.errores.push(q);}
+ st.hechas++;
+ app.querySelectorAll('.opciones button').forEach(b=>{const j=Number(b.dataset.i);b.disabled=true;if(j===q.ok){b.classList.add('correcta');b.textContent='✓ '+q.opciones[j];}else if(j===i){b.classList.add('incorrecta');b.textContent='✕ '+q.opciones[j];}});
+ document.getElementById('retro').innerHTML=`<div class="retro ${bien?'bien':'mal'}"><b>${bien?'Correcto · +'+ganados+' pts':i===-1?'Se acabó el tiempo':'Respuesta: '+esc(q.opciones[q.ok])}</b><p>${esc(q.porque)}</p><p class="archivo">${esc(q.archivo)}</p></div><button class="primario" id="sig" style="width:100%;margin-top:16px">${st.hechas===TOTAL?'Ver resultado':'Siguiente'}</button>`;
+ document.getElementById('sig').onclick=()=>{if(st.hechas===TOTAL)return final();st.pregunta++;if(st.pregunta===seleccion[st.ronda].preguntas.length){st.ronda++;st.pregunta=0;}pregunta();};
+ document.getElementById('sig').focus({preventScroll:true});
+}
+async function peticion(url,opciones={}){const control=new AbortController(),t=setTimeout(()=>control.abort(),8000);try{return await fetch(url,{...opciones,signal:control.signal});}finally{clearTimeout(t);}}
+async function final(){
+ app.innerHTML=`${marca}<p class="ojo">${esc(st.nombre)} · ${st.modo==='clase'?'Ronda de clase':'Repaso'}</p><h1>${st.aciertos} de ${TOTAL}</h1><div class="puntos">${st.puntos} pts</div><p class="suave">${st.aciertos===TOTAL?'Identificaste todos los casos.':'Vuelve a los archivos indicados para repasar tus respuestas.'}</p>
+ ${st.errores.length?`<details><summary>Repasar ${st.errores.length} respuesta${st.errores.length===1?'':'s'}</summary>${st.errores.map(q=>`<div class="revisar"><p class="archivo">${esc(q.archivo)}</p><p>${esc(q.texto||q.codigo||q.bloques[0][1])}</p><p><b>${esc(q.opciones[q.ok])}</b> · ${esc(q.porque)}</p></div>`).join('')}</details>`:''}
+ <div id="ranking" role="status"><p class="aviso">${HAY_RANKING&&st.modo==='clase'?'Guardando puntaje…':'Resultado local. Puedes volver a intentarlo.'}</p></div><button class="primario" id="otra">Volver al inicio</button>`;
+ document.getElementById('otra').onclick=inicio;
+ if(!HAY_RANKING||st.modo!=='clase')return;
+ try{const r=await peticion(`${SB_URL}/rest/v1/donde_va`,{method:'POST',headers:headers({'Content-Type':'application/json',Prefer:'return=minimal'}),body:JSON.stringify({nombre:st.nombre,puntos:st.puntos,aciertos:st.aciertos})});if(!r.ok)throw Error(r.status);await pintarRanking(document.getElementById('ranking'),10,st.nombre);}
+ catch(e){const el=document.getElementById('ranking');if(el)el.innerHTML='<p class="aviso">No se pudo enviar. Tu resultado sigue aquí; revisa la conexión y la configuración del ranking.</p>';}
+}
+async function pintarRanking(el,cuantos,yo){
+ try{const r=await peticion(`${SB_URL}/rest/v1/donde_va?select=nombre,puntos,aciertos&order=puntos.desc&limit=500`,{headers:headers()});if(!r.ok)throw Error(r.status);const filas=await r.json(),mejores=new Map();for(const f of filas)if(!mejores.has(f.nombre))mejores.set(f.nombre,f);const top=[...mejores.values()].slice(0,cuantos);if(!el.isConnected)return;
+ el.innerHTML='<h2>Ranking de la clase</h2>'+(top.length?`<table aria-label="Ranking"><thead><tr><th scope="col">Lugar</th><th scope="col">Nombre</th><th scope="col">Puntos</th></tr></thead><tbody>${top.map((f,i)=>`<tr class="${f.nombre===yo?'yo':''}"><td class="n">${i+1}</td><td>${esc(f.nombre)} <span class="suave">· ${f.aciertos}/12</span></td><td class="p">${f.puntos}</td></tr>`).join('')}</tbody></table>`:'<p class="suave">Todavía nadie termina la ronda.</p>');
+ }catch(e){if(el.isConnected)el.innerHTML='<p class="suave">No se pudo cargar el ranking. Reintenta con conexión.</p>';}
+}
+function tablero(){document.body.classList.add('tablero');app.innerHTML=`${marca}<p class="ojo">Ronda de clase · 12 preguntas</p><h1>¿Dónde va?</h1><div id="ranking" role="status">${HAY_RANKING?'Cargando…':'Falta conectar Supabase. El juego sí funciona sin conexión.'}</div>`;if(!HAY_RANKING)return;const el=document.getElementById('ranking');pintarRanking(el,15);setInterval(()=>pintarRanking(el,15),10000);}
+if(params.has('tablero'))tablero();else inicio();
+</script></body></html>
