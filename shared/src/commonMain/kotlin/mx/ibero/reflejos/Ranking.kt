@@ -12,7 +12,7 @@ import io.ktor.http.isSuccess
 // Ktor elige el motor de cada una: OkHttp en Android y Desktop, Darwin en iOS.
 private val cliente = HttpClient()
 
-// Manda tu tiempo al ranking. Si no hay internet regresa false y el juego sigue.
+// Si la red o el servidor rechazan el envío, regresa false y el juego sigue.
 suspend fun enviarPuntaje(nombre: String, ms: Long, plataforma: String): Boolean = try {
     val json = """{"nombre":"${limpiar(nombre)}","ms":$ms,"plataforma":"${limpiar(plataforma)}"}"""
     val respuesta = cliente.post("$SUPABASE_URL/rest/v1/puntajes") {
