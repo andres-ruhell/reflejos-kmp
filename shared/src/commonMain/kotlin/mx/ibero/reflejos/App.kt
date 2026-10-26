@@ -83,8 +83,8 @@ fun App() {
             Text(detalle, color = Color.White, fontSize = 20.sp, textAlign = TextAlign.Center)
             Text("Récord: ${record?.let { "$it ms" } ?: "--"}", color = Color.White, fontSize = 18.sp)
 
-            // Hito 3: cuando exista plataforma(), quita las dos barras de la línea de abajo.
-            // Text("${plataforma()} · $MI_NOMBRE", color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp)
+            // Hito 3: mostrar desde qué plataforma juegas.
+            Text("${plataforma()} · $MI_NOMBRE", color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp)
 
             if (envio.isNotEmpty()) {
                 Text(envio, color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp)
