@@ -24,23 +24,23 @@ class Juego(private val reloj: TimeSource = TimeSource.Monotonic) {
     // Cuánto esperar antes de poner la pantalla en verde (entre 1.5 y 4 segundos).
     fun esperaAleatoriaMs(): Long = Random.nextLong(1_500, 4_000)
 
-    // Ya está hecha: sirve de ejemplo.
     fun empezar() {
         estado = Estado.Esperando
         momentoVerde = null
     }
 
     fun ponerVerde() {
-        // TODO Hito 1.1: solo si el estado es Esperando,
-        //   cambia el estado a Ya y guarda el momento con reloj.markNow()
-        TODO("Hito 1.1")
+        if (estado == Estado.Esperando) {
+            estado = Estado.Ya
+            momentoVerde = reloj.markNow()
+        }
     }
 
     fun tocar() {
-        // TODO Hito 1.2: decide el nuevo estado según el actual:
-        //   - Esperando  → Falta (tocaste antes de tiempo)
-        //   - Ya         → Resultado con los milisegundos: momentoVerde!!.elapsedNow().inWholeMilliseconds
-        //   - cualquier otro → se queda igual
-        TODO("Hito 1.2")
+        estado = when (estado) {
+            Estado.Esperando -> Estado.Falta
+            Estado.Ya -> Estado.Resultado(momentoVerde!!.elapsedNow().inWholeMilliseconds)
+            else -> estado
+        }
     }
 }
