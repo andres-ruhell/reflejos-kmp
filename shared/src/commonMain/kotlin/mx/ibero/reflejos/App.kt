@@ -58,7 +58,7 @@ fun App() {
             // envio = "Enviando..."
             // scope.launch {
             //     val ok = enviarPuntaje(MI_NOMBRE, resultado.ms, plataforma())
-            //     envio = if (ok) "En el ranking" else "Sin conexión: solo cuenta aquí"
+            //     envio = if (ok) "En el ranking" else "No enviado: resultado local"
             // }
         }
     }
