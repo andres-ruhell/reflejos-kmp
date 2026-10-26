@@ -43,11 +43,11 @@ fun App() {
     }
 
     fun alTocar() {
-        // TODO Hito 2.1: según el estado actual, empieza una ronda o registra el toque:
-        //   - Inicio, Falta o Resultado → juego.empezar()
-        //   - Esperando o Ya            → juego.tocar()
-        //   Pista: usa when (estado) { ... } y para Resultado escribe "is Estado.Resultado".
-        // Después copia el estado del juego a la pantalla:  estado = juego.estado
+        when (estado) {
+            Estado.Inicio, Estado.Falta, is Estado.Resultado -> juego.empezar()
+            Estado.Esperando, Estado.Ya -> juego.tocar()
+        }
+        estado = juego.estado
 
         val resultado = estado
         if (resultado is Estado.Resultado) {
@@ -63,20 +63,16 @@ fun App() {
         }
     }
 
-    // TODO Hito 2.2: elige color, título y detalle para Ya, Resultado y Falta.
-    //   Pista para Resultado: el tiempo está en e.ms  →  "${e.ms} ms"
     val (fondo, titulo, detalle) = when (val e = estado) {
         Estado.Inicio -> Triple(Color(0xFF5B34D6), "Reflejos KMP", "Toca para empezar")
         Estado.Esperando -> Triple(Color(0xFFC0392B), "Espera...", "Toca cuando se ponga verde")
-        Estado.Ya -> Triple(Color.Gray, "TODO", "")
-        is Estado.Resultado -> Triple(Color.Gray, "TODO", "")
-        Estado.Falta -> Triple(Color.Gray, "TODO", "")
+        Estado.Ya -> Triple(Color(0xFF1E8E4E), "¡YA!", "¡Toca!")
+        is Estado.Resultado -> Triple(Color(0xFF16132A), "${e.ms} ms", "Toca para repetir")
+        Estado.Falta -> Triple(Color(0xFFE8743B), "¡Muy pronto!", "Toca para repetir")
     }
 
     Box(
-        // TODO Hito 2.3: agrega  .clickable { alTocar() }  al final del Modifier
-        //   para que toda la pantalla responda al toque o al clic.
-        modifier = Modifier.fillMaxSize().background(fondo),
+        modifier = Modifier.fillMaxSize().background(fondo).clickable { alTocar() },
         contentAlignment = Alignment.Center,
     ) {
         Column(
