@@ -54,12 +54,12 @@ fun App() {
             val anterior = record
             if (anterior == null || resultado.ms < anterior) record = resultado.ms
 
-            // Hito 4: quita las dos barras (//) de estas cinco líneas para mandar tu tiempo al ranking.
-            // envio = "Enviando..."
-            // scope.launch {
-            //     val ok = enviarPuntaje(MI_NOMBRE, resultado.ms, plataforma())
-            //     envio = if (ok) "En el ranking" else "Sin conexión: solo cuenta aquí"
-            // }
+            // Hito 4: mandar el tiempo al ranking en vivo.
+            envio = "Enviando..."
+            scope.launch {
+                val ok = enviarPuntaje(MI_NOMBRE, resultado.ms, plataforma())
+                envio = if (ok) "En el ranking" else "Sin conexión: solo cuenta aquí"
+            }
         }
     }
 
