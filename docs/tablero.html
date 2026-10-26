@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ranking en vivo · Reflejos KMP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fondo: #16132A; --tarjeta: #221D3D; --borde: #3A3360; --texto: #F6F4EF; --suave: #CFC8E8;
+    --morado: #B49CFF; --naranja: #F0A070; --verde: #6FD69A;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--fondo); color: var(--texto); font-family: 'IBM Plex Sans', Arial, sans-serif; min-height: 100vh; padding: 40px 48px; }
+  h1 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 48px; }
+  .cabeza { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: 32px; }
+  .ojo { color: var(--morado); text-transform: uppercase; letter-spacing: 3px; font-weight: 600; font-size: 16px; margin-bottom: 8px; }
+  .estado { color: var(--suave); font-size: 16px; }
+  .estado b { color: var(--verde); }
+  .botones { display: flex; gap: 12px; }
+  button { font: 600 16px 'IBM Plex Sans', Arial, sans-serif; color: var(--texto); background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+  button.fuerte { background: #5B34D6; border-color: #5B34D6; }
+  .rejilla { display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px; }
+  @media (max-width: 900px) { .rejilla { grid-template-columns: 1fr; } body { padding: 24px 16px; } }
+  .panel { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 16px; padding: 24px; }
+  .panel h2 { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 24px; margin-bottom: 16px; color: var(--suave); font-weight: 500; }
+  table { width: 100%; border-collapse: collapse; font-size: 26px; }
+  td { padding: 10px 8px; border-top: 1px solid var(--borde); }
+  tr:first-child td { border-top: none; }
+  td.pos { width: 56px; color: var(--suave); font-family: 'Space Grotesk', Arial, sans-serif; }
+  td.ms { text-align: right; font-family: 'Space Grotesk', Arial, sans-serif; font-weight: 700; white-space: nowrap; }
+  tr.oro td.ms { color: var(--naranja); }
+  .chip { display: inline-block; font-size: 15px; padding: 3px 10px; border-radius: 999px; background: #2E2752; color: var(--suave); margin-left: 10px; vertical-align: middle; }
+  .plataformas { display: flex; flex-direction: column; gap: 16px; }
+  .plat { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 16px 0; border-top: 1px solid var(--borde); }
+  .plat:first-of-type { border-top: none; }
+  .plat .nombre { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 28px; font-weight: 700; }
+  .plat .grande { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 28px; font-weight: 700; text-align: right; color: var(--naranja); }
+  .plat .detalle { color: var(--suave); font-size: 16px; grid-column: 1 / -1; }
+  .vacio { color: var(--suave); font-size: 20px; padding: 24px 0; }
+  .config { max-width: 640px; margin: 80px auto; display: flex; flex-direction: column; gap: 16px; }
+  .config input { font: 16px 'IBM Plex Sans', Arial, sans-serif; padding: 12px; border-radius: 10px; border: 1px solid var(--borde); background: var(--tarjeta); color: var(--texto); }
+  .config p { color: var(--suave); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const LS = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+};
+const params = new URLSearchParams(location.search);
+let URL_SB = params.get('url') || LS.get('tablero_url') || '';
+let KEY_SB = params.get('key') || LS.get('tablero_key') || '';
+let desde = LS.get('tablero_desde') || '';
+let ultimoError = '';
+
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function headers() {
+  const h = { apikey: KEY_SB };
+  if (KEY_SB.startsWith('eyJ')) h.Authorization = 'Bearer ' + KEY_SB;
+  return h;
+}
+function tipo(plataforma) {
+  const t = String(plataforma).split(' · ')[0].trim();
+  return ['Android', 'Desktop', 'iOS'].includes(t) ? t : 'Otra';
+}
+
+function pintarConfig() {
+  document.getElementById('app').innerHTML = `
+    <div class="config">
+      <p class="ojo">Ranking en vivo · Reflejos KMP</p>
+      <h1>Conecta el tablero</h1>
+      <p>Pega la URL del proyecto de Supabase y su llave pública (Settings → API Keys). Se guardan en este navegador.</p>
+      <input id="u" placeholder="https://xxxx.supabase.co" value="${esc(URL_SB)}">
+      <input id="k" placeholder="sb_publishable_... o la llave anon" value="${esc(KEY_SB)}">
+      <button class="fuerte" id="guardar">Conectar</button>
+    </div>`;
+  document.getElementById('guardar').onclick = () => {
+    URL_SB = document.getElementById('u').value.trim().replace(/\/$/, '');
+    KEY_SB = document.getElementById('k').value.trim();
+    LS.set('tablero_url', URL_SB); LS.set('tablero_key', KEY_SB);
+    arrancar();
+  };
+}
+
+function pintar(filas) {
+  // Mejor tiempo por persona y plataforma
+  const mejores = new Map();
+  for (const f of filas) {
+    const clave = f.nombre + '|' + f.plataforma;
+    if (!mejores.has(clave) || f.ms < mejores.get(clave).ms) mejores.set(clave, f);
+  }
+  const top = [...mejores.values()].sort((a, b) => a.ms - b.ms).slice(0, 10);
+
+  const porPlat = {};
+  for (const f of filas) {
+    const t = tipo(f.plataforma);
+    porPlat[t] = porPlat[t] || { n: 0, suma: 0, mejor: Infinity };
+    porPlat[t].n++; porPlat[t].suma += f.ms; porPlat[t].mejor = Math.min(porPlat[t].mejor, f.ms);
+  }
+  const plats = ['Android', 'Desktop', 'iOS', 'Otra'].filter(p => porPlat[p]);
+
+  const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('app').innerHTML = `
+    <div class="cabeza">
+      <div>
+        <p class="ojo">Ranking en vivo${desde ? ' · ronda nueva' : ''}</p>
+        <h1>Reflejos KMP</h1>
+        <p class="estado">${ultimoError ? '⚠ ' + esc(ultimoError) : '<b>●</b> Conectado · ' + filas.length + (filas.length === 1 ? ' jugada · ' : ' jugadas · ') + hora}</p>
+      </div>
+      <div class="botones">
+        <button class="fuerte" id="ronda">Nueva ronda</button>
+        <button id="todo">Ver todo</button>
+        <button id="cfg">Configurar</button>
+      </div>
+    </div>
+    <div class="rejilla">
+      <div class="panel">
+        <h2>Los 10 más rápidos</h2>
+        ${top.length ? `<table>${top.map((f, i) => `
+          <tr class="${i === 0 ? 'oro' : ''}">
+            <td class="pos">${i + 1}</td>
+            <td>${esc(f.nombre)}<span class="chip">${esc(f.plataforma)}</span></td>
+            <td class="ms">${f.ms} ms</td>
+          </tr>`).join('')}</table>` : '<p class="vacio">Todavía no hay tiempos. ¡A jugar!</p>'}
+      </div>
+      <div class="panel">
+        <h2>Resultados por plataforma</h2>
+        <div class="plataformas">
+          ${plats.length ? plats.map(p => `
+            <div class="plat">
+              <span class="nombre">${p}</span>
+              <span class="grande">${porPlat[p].mejor} ms</span>
+              <span class="detalle">${porPlat[p].n} ${porPlat[p].n === 1 ? 'jugada' : 'jugadas'} · promedio ${Math.round(porPlat[p].suma / porPlat[p].n)} ms · el número grande es el mejor tiempo; depende de la persona y el dispositivo</span>
+            </div>`).join('') : '<p class="vacio">Aquí aparecerán Android, Desktop e iOS.</p>'}
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('ronda').onclick = () => { desde = new Date().toISOString(); LS.set('tablero_desde', desde); cargar(); };
+  document.getElementById('todo').onclick = () => { desde = ''; LS.del('tablero_desde'); cargar(); };
+  document.getElementById('cfg').onclick = () => { clearInterval(timer); pintarConfig(); };
+}
+
+let timer = null;
+let ultimasFilas = [];
+async function cargar() {
+  let q = `${URL_SB}/rest/v1/puntajes?select=nombre,ms,plataforma,creado&order=ms.asc&limit=1000`;
+  if (desde) q += `&creado=gte.${encodeURIComponent(desde)}`;
+  try {
+    const r = await fetch(q, { headers: headers() });
+    if (!r.ok) throw new Error('Supabase respondió ' + r.status);
+    ultimasFilas = await r.json();
+    ultimoError = '';
+  } catch (e) {
+    ultimoError = 'Sin conexión con Supabase (' + e.message + '). Reintentando…';
+  }
+  pintar(ultimasFilas);
+}
+function arrancar() {
+  if (!URL_SB || !KEY_SB) return pintarConfig();
+  cargar();
+  clearInterval(timer);
+  timer = setInterval(cargar, 2000);
+}
+arrancar();
+</script>
+</body>
+</html>
