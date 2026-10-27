@@ -1,36 +1,12 @@
-# Archivos y ramas de la minipráctica
+# Guía rápida de comprobación
 
-Trabaja sobre tu copia de inicial. No necesitas cambiar de rama al terminar cada hito; las demás sirven como puntos de recuperación o referencia.
+1. Abre el proyecto completo de la rama solucion o el ZIP incluido.
+2. Espera a que Sync termine.
+3. Ejecuta Desktop y comprueba inicio, espera, tiempo, falta, récord y repetición.
+4. Repite esos casos en el emulador Android. En Mac con Apple Silicon y Xcode también puede comprobarse iOS.
+5. Ejecuta JuegoTest: las cuatro pruebas deben pasar en cada destino utilizado.
+6. Completa Registro_Resultados.md y adjunta capturas de la aplicación y de las pruebas.
 
-| Rama | Estado esperado |
-|---|---|
-| inicial | Pantalla morada y dos pruebas de JuegoTest pendientes por TODO |
-| hito1 | Lógica completa; pasan las cuatro pruebas de JuegoTest |
-| hito2 | La interfaz responde, cambia de color y mide el tiempo |
-| hito3 | Se muestra la plataforma y están los actual de Android, Desktop e iOS |
-| solucion | Los cuatro hitos completos; el envío puede terminar en resultado local |
+Para preparar herramientas utiliza el manual de instalación. Para los comandos y los resultados esperados, utiliza la minipráctica. La aplicación ya está implementada y no necesita cambios de lógica para realizar la actividad.
 
-## Guardar antes de cambiar
-
-```sh
-git stash push -u -m "Mi avance"
-git switch hito1
-```
-
-Usa hito1 para empezar el hito 2, hito2 para empezar el 3, hito3 para empezar el 4 o solucion para consultar el código completo. El avance guardado queda en `git stash list`. Vuelve a la rama donde lo guardaste antes de usar `git stash apply` y revisa cualquier conflicto.
-
-## Archivos
-
-- commonMain: Juego.kt, App.kt, Ranking.kt, Config.kt y Plataforma.kt desde el hito 3.
-- commonTest: JuegoTest.kt.
-- androidMain, jvmMain e iosMain: sus Plataforma*.kt desde el hito 3.
-- Los Platform*.kt originales de la plantilla se conservan y no se modifican.
-- `supabase.sql` crea solo `puntajes`, la tabla opcional de la aplicación de reflejos.
-
-Todos los archivos usan el paquete mx.ibero.reflejos. Crea el actual de iOS también en Windows para completar la fuente; la ejecución y compilación de ese destino requieren Mac.
-
-## Otras comprobaciones
-
-Android host comprueba lógica en la computadora con `:shared:testAndroidHostTest`. No abre el emulador. En Apple Silicon, iOS Simulator usa `:shared:iosSimulatorArm64Test`. Ejecuta cada tarea con `./gradlew` en macOS o `.\gradlew.bat` en PowerShell.
-
-`assembleDebug` solo genera la APK; para instalar y abrir Android usa Run del IDE. El récord vive mientras la app sigue abierta. Sin ranking, el tiempo y la posibilidad de repetir deben mantenerse.
+El ranking es opcional. Si no está configurado, el tiempo debe permanecer visible y la aplicación debe permitir otra ronda. Registra No aplica para el envío remoto.

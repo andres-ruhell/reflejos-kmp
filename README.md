@@ -1,47 +1,62 @@
-# Minipráctica Reflejos KMP
+# Ejecutar y verificar Reflejos KMP
 
-Aplicación de reflejos para aprender Kotlin Multiplatform en cuatro hitos. Esta carpeta contiene únicamente el proyecto Kotlin y sus recursos de red. El juego de preguntas ¿Dónde va? se distribuye por separado.
+Aplicación Kotlin Multiplatform completa para comprobar su funcionamiento en Desktop y Android; iOS es opcional en Mac con Apple Silicon y Xcode. La rama de la actividad es `solucion`.
 
-## Empezar
+## Abrir
 
-1. Instala Android Studio y el plugin Kotlin Multiplatform con sus dependencias; sigue el manual de instalación.
-2. Clona este repositorio o descomprime Reflejos_KMP_Proyecto.zip. Abre la carpeta que contiene settings.gradle.kts y espera a que termine Sync.
-3. Empieza en `inicial`. En el IDE usa Desktop o desktopApp [hot]. En la terminal del proyecto usa el comando de tu sistema:
+La opción más sencilla es descomprimir `Reflejos_KMP_Proyecto.zip` y abrir la carpeta Reflejos que contiene settings.gradle.kts en Android Studio. El ZIP contiene la aplicación terminada y no requiere Git.
 
-macOS:
+También puedes clonar la rama completa:
+
+```sh
+git clone -b solucion https://github.com/andres-ruhell/reflejos-kmp.git
+cd reflejos-kmp
+```
+
+Deja terminar Sync. El Manual de instalación de Kotlin Multiplatform prepara las herramientas y verifica una plantilla; la minipráctica comprueba esta aplicación.
+
+## Ejecutar
+
+En el IDE selecciona Desktop y pulsa Run. Para Android, enciende el emulador, selecciona androidApp y pulsa Run. En Mac puedes abrir iosApp/iosApp.xcodeproj con Xcode y ejecutar el esquema iosApp en un simulador.
+
+Desktop desde terminal, en macOS:
 
 ```sh
 ./gradlew :desktopApp:run
 ```
 
-Windows PowerShell:
+Desktop desde PowerShell, en Windows:
 
 ```powershell
 .\gradlew.bat :desktopApp:run
 ```
 
-Debe abrirse una pantalla morada. El clic se completa en el hito 2. El proyecto ya tiene Ktor y el permiso INTERNET; no generes otro proyecto ni cambies versiones durante la práctica.
+Debe aparecer una pantalla morada. Comprueba inicio, espera al verde, resultado en ms, toque anticipado, récord y repetición. El código ya está implementado; la actividad consiste en ejecutarlo y registrar sus resultados.
 
-Sigue la minipráctica: Juego.kt → App.kt → Plataforma*.kt → Config.kt y envío. El código está en `shared/src/<sourceSet>/kotlin/mx/ibero/reflejos/`; los tests en commonTest; Desktop usa jvmMain.
-
-## Comprobar
+## Pruebas automáticas
 
 macOS:
 
 ```sh
-./gradlew :shared:jvmTest
+./gradlew :shared:jvmTest :shared:testAndroidHostTest
 ```
 
 Windows PowerShell:
 
 ```powershell
-.\gradlew.bat :shared:jvmTest
+.\gradlew.bat :shared:jvmTest :shared:testAndroidHostTest
 ```
 
-En inicial fallan dos de las cuatro pruebas de JuegoTest por los TODO; al completar el hito 1 pasan las cuatro. Puede haber pruebas adicionales de la plantilla.
+Deben pasar las cuatro pruebas de JuegoTest en cada destino. Puede haber pruebas adicionales de plantilla. Android host verifica lógica en la computadora; también hay que probar visualmente la aplicación en el emulador.
 
-Android: enciende el emulador y ejecuta androidApp desde el IDE. iOS: solo en Mac con Xcode, abre iosApp/iosApp.xcodeproj y ejecuta el esquema iosApp en un simulador.
+Solo en Mac con Apple Silicon:
 
-Versiones del proyecto: Kotlin 2.4.20, Compose Multiplatform 1.12.1, AGP 9.1.1, Gradle 9.5.1, daemon Azul 21 y Ktor 3.6.0. Las descargas automáticas deben terminar antes de empezar los hitos.
+```sh
+./gradlew :shared:iosSimulatorArm64Test
+```
 
-El ranking compartido es opcional. El resultado local permite completar la práctica. Consulta `Ranking_opcional.md` si el grupo va a usar Supabase.
+Registra las comprobaciones y capturas indicadas en `Registro_Resultados.md`. El récord es de la sesión y no persiste después de cerrar la app.
+
+Versiones: Kotlin 2.4.20, Compose Multiplatform 1.12.1, AGP 9.1.1, Gradle 9.5.1, daemon Azul JDK 21 y Ktor 3.6.0. Conserva las versiones del proyecto.
+
+El envío remoto es opcional; un resultado local permite completar la actividad. Si se utiliza el servicio, consulta `Ranking_opcional.md`. El juego de preguntas ¿Dónde va? se distribuye por separado.
