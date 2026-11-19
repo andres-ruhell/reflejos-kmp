@@ -15,7 +15,7 @@ Actividad de repaso de Kotlin Multiplatform para jugar en el navegador. Usa ejem
 3. Pulsa Empezar y elige una respuesta. Después lee la explicación: no hay límite de tiempo para leerla. Pulsa Siguiente para continuar.
 4. Al final verás aciertos y puntos. Si hubo errores, abre Repasar respuestas para ver la solución y el archivo relacionado. Pulsa Volver al inicio para repetir.
 
-Hay cuatro rondas: carpeta o source set, si el fragmento compila, ubicación de dependencias y comportamiento del código. En expect/actual se supone que los imports, el paquete y las implementaciones de los demás destinos están completos, salvo que la pregunta indique lo contrario.
+Hay cuatro rondas: carpeta o source set, si el fragmento compila, preguntas de la teoría y comportamiento del código de Reflejos KMP. En «¿Compila?» cada caso cambia una sola cosa del proyecto terminado; lo demás queda igual.
 
 Cada acierto suma 100 puntos. En Clase se agrega un bono por rapidez de hasta 50 puntos y por racha de hasta 50; una respuesta incorrecta o sin contestar no suma y reinicia la racha. En Repaso cada acierto vale 100 puntos, sin bonos. Compara puntajes únicamente dentro de la misma modalidad.
 

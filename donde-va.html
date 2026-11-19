@@ -107,44 +107,43 @@ const SB_KEY = params.get('key') || SUPABASE_KEY;
 const HAY_RANKING = Boolean(SB_URL && SB_KEY);
 const SEGUNDOS = 20;
 
-const FUENTES = ['commonMain', 'androidMain', 'Desktop (jvmMain)', 'iosMain'];
+const CARPETAS = ['commonMain', 'commonTest', 'androidMain', 'jvmMain (escritorio)', 'iosMain'];
 const SI_NO = ['Sí, compila', 'No compila'];
-const BLOQUES = ['commonMain', 'androidMain', 'iosMain', 'Desktop (jvmMain)', 'commonTest'];
 const COMPILADORES = ['Kotlin/JVM', 'Kotlin/Native', 'Kotlin/Wasm', 'Ninguno: se interpreta'];
 
 const RONDAS = [
- {titulo:'¿En qué carpeta va?',regla:'Elige el source set correcto. Los ejemplos usan los archivos de Reflejos KMP.',preguntas:[
- {codigo:'class Juego(private val reloj: TimeSource = TimeSource.Monotonic)',opciones:FUENTES,ok:0,porque:'Juego.kt usa Kotlin puro y kotlin.time: la lógica se comparte.',archivo:'Lógica · Juego.kt'},
- {codigo:'val modelo = android.os.Build.MODEL',opciones:FUENTES,ok:1,porque:'Build.MODEL pertenece al SDK de Android.',archivo:'Plataformas · Plataforma.android.kt'},
- {codigo:'val equipo = UIDevice.currentDevice.model',opciones:FUENTES,ok:3,porque:'UIDevice es de UIKit. En iosMain se importa platform.UIKit.UIDevice.',archivo:'Plataformas · Plataforma.ios.kt'},
- {codigo:'System.getProperty("os.name")',opciones:FUENTES,ok:2,porque:'Este actual obtiene el sistema de la laptop con la API de Java.',archivo:'Plataformas · Plataforma.jvm.kt'},
- {codigo:'val marca = TimeSource.Monotonic.markNow()',opciones:FUENTES,ok:0,porque:'kotlin.time está disponible en todas las plataformas; no hace falta java.time.',archivo:'Lógica · Juego.kt'},
- {codigo:'@Composable\nfun App() { Text("Reflejos KMP") }',opciones:FUENTES,ok:0,porque:'Compose Multiplatform permite compartir la pantalla en commonMain.',archivo:'Interfaz · App.kt'},
- {codigo:'suspend fun enviarPuntaje(nombre: String, ms: Long, plataforma: String): Boolean',opciones:FUENTES,ok:0,porque:'La petición se escribe en commonMain; cada plataforma aporta su motor de Ktor.',archivo:'Red · Ranking.kt'}]},
- {titulo:'¿Compila?',regla:'Los fragmentos usan el mismo paquete. Supón que los imports y los actual de los demás destinos están completos.',preguntas:[
- {bloques:[['commonMain','expect fun plataforma(): String'],['androidMain','actual fun plataforma(): String = "Android · ${Build.MODEL}"']],opciones:SI_NO,ok:0,porque:'El actual tiene el mismo nombre, parámetros y retorno que el expect.',archivo:'Plataformas · Plataforma*.kt'},
- {bloques:[['commonMain','expect fun plataforma(): String'],['iosMain','fun plataforma(): String = "iOS"']],opciones:SI_NO,ok:1,porque:'Falta actual en la implementación de iosMain.',archivo:'Plataformas · Plataforma.ios.kt'},
- {bloques:[['commonMain','expect fun plataforma(): String'],['jvmMain','actual fun plataforma(): Int = 1']],opciones:SI_NO,ok:1,porque:'El retorno debe ser String, igual que en el expect.',archivo:'Plataformas · Plataforma.jvm.kt'},
- {bloques:[['commonMain','val hoy = java.util.Date()']],opciones:SI_NO,ok:1,porque:'La API java.util no está disponible en el destino iOS del proyecto.',archivo:'Lógica · código compartido'},
- {bloques:[['commonMain','val espera = Random.nextLong(1_500, 4_000)']],opciones:SI_NO,ok:0,porque:'kotlin.random es multiplataforma. Así elige Juego.kt su espera.',archivo:'Lógica · Juego.kt'},
- {texto:'El actual de escritorio devuelve una cadena fija. ¿Es válido?',bloques:[['commonMain','expect fun plataforma(): String'],['jvmMain','actual fun plataforma(): String = "Desktop"']],opciones:SI_NO,ok:0,porque:'Sí. Cumple la firma, aunque no use una API del sistema.',archivo:'Plataformas · Plataforma.jvm.kt'},
- {texto:'Hay actual en Android y Desktop, pero falta el de iosMain. ¿Compila el destino iOS?',codigo:'expect fun plataforma(): String',opciones:SI_NO,ok:1,porque:'Cada destino compilado necesita su actual. Crear el archivo iOS es necesario; ejecutarlo requiere Mac.',archivo:'Plataformas · Plataforma.ios.kt'}]},
- {titulo:'¿Dónde va la dependencia?',regla:'Lee el destino y el archivo indicados. Los motores de Ktor se agregan en shared/build.gradle.kts.',preguntas:[
- {codigo:'implementation(libs.ktor.client.core)',opciones:BLOQUES,ok:0,porque:'El núcleo multiplataforma permite usar HttpClient en commonMain.',archivo:'Red · shared/build.gradle.kts'},
- {codigo:'implementation(libs.ktor.client.darwin)',opciones:BLOQUES,ok:2,porque:'Darwin es el motor para iOS.',archivo:'Red · shared/build.gradle.kts'},
- {texto:'OkHttp para la app Android.',codigo:'implementation(libs.ktor.client.okhttp)',opciones:BLOQUES,ok:1,porque:'Android usa OkHttp; se declara en androidMain.dependencies.',archivo:'Red · shared/build.gradle.kts'},
- {codigo:'implementation(libs.kotlin.test)',opciones:BLOQUES,ok:4,porque:'Las pruebas compartidas de JuegoTest.kt viven en commonTest.',archivo:'Lógica · shared/build.gradle.kts'},
- {texto:'Esta línea ya viene en desktopApp/build.gradle.kts. ¿Qué aplicación la usa?',codigo:'implementation(libs.kotlinx.coroutinesSwing)',opciones:['androidApp','iosApp','desktopApp','Todas por igual'],ok:2,porque:'El alias real es coroutinesSwing. Está en desktopApp, que usa la JVM de escritorio.',archivo:'Plantilla · desktopApp/build.gradle.kts'},
- {texto:'OkHttp para el juego en la laptop.',codigo:'implementation(libs.ktor.client.okhttp)',opciones:BLOQUES,ok:3,porque:'También funciona en JVM: en shared se agrega a jvmMain.dependencies.',archivo:'Red · shared/build.gradle.kts'},
- {texto:'¿En qué archivo se habilita el acceso a internet de Android?',codigo:'<uses-permission android:name="android.permission.INTERNET" />',opciones:['shared/build.gradle.kts','androidApp/src/main/AndroidManifest.xml','iosApp/Info.plist','Juego.kt'],ok:1,porque:'El permiso va en el manifiesto Android, antes de <application>. Ya viene en el proyecto.',archivo:'Preparación · AndroidManifest.xml'}]},
- {titulo:'¿Qué hace el código?',regla:'Relaciona el código, los estados y las plataformas de los ejemplos.',preguntas:[
- {texto:'¿Qué compilador genera el código compartido para el iPhone?',opciones:COMPILADORES,ok:1,porque:'Kotlin/Native genera código nativo. Xcode integra el framework y construye la app.',archivo:'Plataformas · destino iOS'},
- {texto:'¿Qué ocurre después de compilar Kotlin para Android?',opciones:['Se ejecuta en la JVM de escritorio','D8 convierte el bytecode en DEX para Android Runtime','Se interpreta el archivo .kt','Xcode crea la APK'],ok:1,porque:'Kotlin/JVM genera bytecode; las herramientas Android lo convierten a DEX para ART.',archivo:'Destino Android'},
- {texto:'¿Dónde se ejecuta desktopApp?',opciones:['En la JVM','Dentro de Safari','En Kotlin/Native','En el simulador iOS'],ok:0,porque:'El destino de escritorio del kit es JVM; por eso el source set es jvmMain.',archivo:'Destino Desktop'},
- {texto:'Tocas la pantalla mientras todavía está roja. ¿Qué estado sigue?',opciones:['Ya','Resultado','Falta','Inicio'],ok:2,porque:'Juego.tocar() cambia Esperando a Falta: tocaste antes de tiempo.',archivo:'Lógica · Juego.kt'},
- {texto:'¿Qué le entrega el módulo shared a Xcode?',opciones:['Un framework','Una APK','Un archivo .jar','Un archivo .wasm'],ok:0,porque:'Xcode usa el framework de shared en la app iOS.',archivo:'Destino iOS'},
- {texto:'En el proyecto completo, ¿qué esperas al ejecutar JuegoTest?',opciones:['Que fallen dos casos','Que no haya pruebas','Que pasen los cuatro casos','Que solo funcione en Android'],ok:2,porque:'Las cuatro pruebas verifican la lógica ya implementada. Puede haber pruebas adicionales de plantilla.',archivo:'Pruebas · JuegoTest.kt'},
- {texto:'Supabase no está disponible. ¿Qué debe pasar?',opciones:['El juego se cierra','El juego sigue con el resultado local','Hay que instalar Xcode','Se pierde todo el código'],ok:1,porque:'El envío es opcional. La práctica permite seguir jugando y mostrar el tiempo local.',archivo:'Red · App.kt y Ranking.kt'}]}
+ {titulo:'¿En qué carpeta va?',sub:'Source sets de la práctica',regla:'Elige la carpeta de shared/src donde va cada fragmento de Reflejos KMP.',preguntas:[
+ {codigo:'class Juego(private val reloj: TimeSource = TimeSource.Monotonic)',opciones:CARPETAS,ok:0,porque:'Juego.kt es Kotlin puro y usa kotlin.time, que existe en todas las plataformas: va en commonMain.',archivo:'Paso 2 · Juego.kt'},
+ {codigo:'@Test\nfun tocarAntesDelVerdeEsFalta() { … }',opciones:CARPETAS,ok:1,porque:'Las pruebas compartidas van en commonTest y corren en JVM, Android e iOS.',archivo:'Paso 3 · JuegoTest.kt'},
+ {codigo:'override val name: String = "Desktop · ${System.getProperty("os.name")}"',opciones:CARPETAS,ok:3,porque:'System.getProperty es de Java: es el actual de escritorio, en jvmMain.',archivo:'Paso 5 · Platform.jvm.kt'},
+ {codigo:'override val name: String = "Android · ${Build.MODEL}"',opciones:CARPETAS,ok:2,porque:'Build.MODEL es del SDK de Android: va en androidMain.',archivo:'Paso 5 · Platform.android.kt'},
+ {codigo:'override val name: String = UIDevice.currentDevice.systemName()',opciones:CARPETAS,ok:4,porque:'UIDevice es de UIKit, de Apple: va en iosMain.',archivo:'Plantilla · Platform.ios.kt'},
+ {codigo:'@Composable\nfun App() { … }',opciones:CARPETAS,ok:0,porque:'Con Compose Multiplatform la misma pantalla se comparte desde commonMain.',archivo:'Paso 4 · App.kt'},
+ {codigo:'expect fun getPlatform(): Platform',opciones:CARPETAS,ok:0,porque:'El expect es la promesa del código común; cada plataforma la cumple con su actual.',archivo:'Plantilla · Platform.kt'}]},
+ {titulo:'¿Compila?',sub:'expect / actual',regla:'Cada caso cambia una sola cosa del proyecto terminado. Lo demás queda igual.',preguntas:[
+ {bloques:[['commonMain','expect fun getPlatform(): Platform'],['androidMain','class AndroidPlatform : Platform {\n    override val name: String = "Android"\n}\nactual fun getPlatform(): Platform = AndroidPlatform()']],opciones:SI_NO,ok:0,porque:'El actual cumple la firma del expect. Que regrese un texto fijo no importa.',archivo:'Platform.android.kt'},
+ {bloques:[['commonMain','expect fun getPlatform(): Platform'],['iosMain','fun getPlatform(): Platform = IOSPlatform()']],opciones:SI_NO,ok:1,porque:'A la versión de iOS le falta la palabra actual. El compilador pide: «Declaration must be marked with actual».',archivo:'Platform.ios.kt'},
+ {bloques:[['commonMain','val hoy = java.util.Date()']],opciones:SI_NO,ok:1,porque:'java.util es de Java y no existe en iOS. En commonMain da «Unresolved reference java».',archivo:'Código común'},
+ {bloques:[['commonMain','val espera = Random.nextLong(1_500, 4_000)']],opciones:SI_NO,ok:0,porque:'kotlin.random es multiplataforma. Así elige Juego.kt su espera.',archivo:'Juego.kt'},
+ {bloques:[['commonMain','expect fun getPlatform(): Platform'],['jvmMain','actual fun getPlatform(): String = "Desktop"']],opciones:SI_NO,ok:1,porque:'El actual debe regresar Platform, igual que el expect. El compilador dice que son incompatibles.',archivo:'Platform.jvm.kt'},
+ {bloques:[['commonMain','val modelo = android.os.Build.MODEL']],opciones:SI_NO,ok:1,porque:'Build es solo de Android. En commonMain da «Unresolved reference android»: va en androidMain.',archivo:'Código común'},
+ {bloques:[['commonMain','val marca = TimeSource.Monotonic.markNow()']],opciones:SI_NO,ok:0,porque:'kotlin.time es multiplataforma. Juego.kt usa ese mismo reloj.',archivo:'Juego.kt'}]},
+ {titulo:'Teoría',sub:'Quién, cuándo y cómo',regla:'Preguntas de la presentación de teoría.',preguntas:[
+ {texto:'¿Qué empresa creó Kotlin y Kotlin Multiplatform?',opciones:['Google','JetBrains','Meta','Apple'],ok:1,porque:'JetBrains, la empresa de IntelliJ IDEA. Android Studio está hecho sobre IntelliJ.',archivo:'Teoría · Quién lo inventó'},
+ {texto:'¿Qué compilador genera el código compartido para el iPhone?',opciones:COMPILADORES,ok:1,porque:'Kotlin/Native compila con LLVM a un binario nativo, sin máquina virtual.',archivo:'Teoría · Cómo funciona'},
+ {texto:'¿En qué año se declaró estable Kotlin Multiplatform?',opciones:['2017','2020','2023','2025'],ok:2,porque:'Noviembre de 2023, con Kotlin 1.9.20. En 2017 era experimental y en 2025 se estabilizó Compose para iOS.',archivo:'Teoría · Historia'},
+ {texto:'¿Qué le entrega el módulo shared a Xcode para la app de iOS?',opciones:['Un framework','Una APK','Un archivo .jar','Un archivo .wasm'],ok:0,porque:'Kotlin/Native genera un framework y Xcode lo usa para construir la app.',archivo:'Teoría · Cómo funciona'},
+ {texto:'En iOS, ¿cómo dibuja la interfaz Compose Multiplatform?',opciones:['Con componentes de UIKit','Con su propio motor de dibujo','Con SwiftUI','Dentro de un navegador'],ok:1,porque:'Pinta con su propio motor, como Flutter. Si necesitas la interfaz de Apple, compartes solo la lógica.',archivo:'Teoría · Compose Multiplatform'},
+ {texto:'¿Cuál de estos usa el lenguaje Dart?',opciones:['Kotlin Multiplatform','Flutter','React Native','SwiftUI'],ok:1,porque:'Flutter es de Google y usa Dart. React Native usa JavaScript o TypeScript.',archivo:'Teoría · Comparativa'},
+ {texto:'¿Qué necesitas para compilar la app de iOS?',opciones:['Solo Android Studio','Una Mac con Xcode','Un emulador de Android','Windows con Toolbox'],ok:1,porque:'Sin macOS y Xcode no se compila para iPhone. En Windows se hace escritorio y Android.',archivo:'Teoría · Limitaciones'}]},
+ {titulo:'¿Qué hace el código?',sub:'Reflejos KMP',regla:'Preguntas sobre la app que construimos en la práctica.',preguntas:[
+ {texto:'Tocas la pantalla mientras todavía está roja. ¿Qué estado sigue?',opciones:['Ya','Resultado','Falta','Inicio'],ok:2,porque:'tocar() cambia Esperando a Falta: tocaste antes de tiempo. La pantalla dice «¡Muy pronto!».',archivo:'Juego.kt'},
+ {texto:'La prueba usa un reloj falso. ¿Qué estado espera al final?',codigo:'val reloj = TestTimeSource()\nval juego = Juego(reloj)\njuego.empezar()\njuego.ponerVerde()\nreloj += 237.milliseconds\njuego.tocar()',opciones:['Estado.Resultado(237)','Estado.Falta','Depende de qué tan rápido toques','Estado.Resultado(0)'],ok:0,porque:'TestTimeSource solo avanza cuando el código lo pide: exactamente 237 ms, sin depender de nadie.',archivo:'JuegoTest.kt'},
+ {texto:'Estás en rojo y tocas antes de que termine el delay. ¿Qué pasa con la espera?',codigo:'LaunchedEffect(estado) {\n    if (estado == Estado.Esperando) {\n        delay(juego.esperaAleatoriaMs())\n        juego.ponerVerde()\n        estado = juego.estado\n    }\n}',opciones:['Se pone verde de todos modos','Se cancela sola porque cambió el estado','La app se traba','Se borra el récord'],ok:1,porque:'LaunchedEffect depende de estado: al cambiar a Falta, Compose cancela la espera anterior.',archivo:'App.kt'},
+ {texto:'¿Cuál de estos valores nunca puede salir?',codigo:'fun esperaAleatoriaMs(): Long = Random.nextLong(1_500, 4_000)',opciones:['1500','2750','3999','4000'],ok:3,porque:'nextLong(desde, hasta) incluye el primero y excluye el último: de 1500 a 3999. La prueba lo revisa 100 veces.',archivo:'Juego.kt'},
+ {texto:'Juegas tres rondas: 320 ms, 280 ms y 300 ms. ¿Qué récord se ve?',codigo:'if (anterior == null || resultado.ms < anterior) record = resultado.ms',opciones:['320 ms','280 ms','300 ms','900 ms'],ok:1,porque:'El récord solo cambia cuando el tiempo nuevo es menor: se queda 280 ms.',archivo:'App.kt'},
+ {texto:'Después del paso 5, ¿qué dice la última línea en escritorio en una Mac?',opciones:['Java 21','Desktop · Mac OS X','Android · Pixel','iOS 26.5'],ok:1,porque:'Platform.jvm.kt ahora responde con System.getProperty("os.name"). Es el mismo App.kt.',archivo:'Platform.jvm.kt'},
+ {texto:'En el proyecto terminado, ¿qué esperas al correr JuegoTest en jvm?',opciones:['Que fallen dos casos','Que no haya pruebas','Que pasen los cuatro casos','Que solo funcione en Android'],ok:2,porque:'Las cuatro pruebas pasan en JVM, Android e iOS. La plantilla trae además sus propias pruebas de ejemplo.',archivo:'JuegoTest.kt'}]}
 ];
 const BANCO = RONDAS.reduce((s,r)=>s+r.preguntas.length,0);
 let seleccion = RONDAS;
@@ -177,8 +176,8 @@ const marca = '<div class="marca"><strong>¿Dónde va?</strong><span>Juego de pr
 function inicio() {
  clearInterval(reloj);
  app.innerHTML = `${marca}<p class="ojo">Kotlin Multiplatform</p><h1>¿Dónde va?</h1>
- <p class="suave">Identifica carpetas, código y dependencias de Kotlin Multiplatform. Juega desde el navegador, sin abrir el IDE.</p>
- <div class="rondas">${RONDAS.map((r,i)=>`<div class="ronda"><b>0${i+1} / ${esc(r.titulo)}</b><span>Reflejos KMP</span></div>`).join('')}</div>
+ <p class="suave">Identifica carpetas, código y teoría de Kotlin Multiplatform. Juega desde el navegador, sin abrir el IDE.</p>
+ <div class="rondas">${RONDAS.map((r,i)=>`<div class="ronda"><b>0${i+1} / ${esc(r.titulo)}</b><span>${esc(r.sub)}</span></div>`).join('')}</div>
  <form id="arranque"><div class="campos"><label for="nombre">Tu nombre o apodo<input id="nombre" maxlength="30" autocomplete="nickname" required value="${escAttr(LS.get('dondeva_nombre')||'')}" placeholder="Escribe tu nombre"></label>
  <label for="modo">Elige una ronda<select id="modo"><option value="clase">Clase · 12 preguntas · con reloj</option><option value="practica">Repaso · 28 preguntas · sin reloj</option></select></label></div>
  <p class="aviso" style="margin:16px 0">Clase: 20 segundos por respuesta. Después puedes leer la explicación sin límite.</p><p id="error" role="alert"></p><button class="primario" style="width:100%" type="submit">Empezar</button></form>
